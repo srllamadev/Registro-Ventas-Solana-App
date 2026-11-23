@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { address } from '@solana/kit';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import programa from '../config/programa.json';
@@ -7,6 +7,7 @@ import { leerRegistro, type RegistroUI } from '../solana/lecturas';
 import { negocioValido } from '../solana/validaciones';
 import { ErrorTransaccion, ErrorConfirmacionPendiente, enlaceTransaccion, traducir, type OpcionesEnvio } from '../solana/tx';
 import { crearRegistro, crearCliente, registrarVenta, cambiarMonto, hacerDevolucion } from '../solana/acciones';
+import { calcularEstadisticas, filtrarClientes } from '../solana/estadisticas';
 
 type Operacion = 'registro' | 'cliente' | 'venta' | 'monto' | 'devolucion';
 const operaciones: { id: Operacion; texto: string }[] = [
@@ -37,6 +38,9 @@ export function Registro({ onCambio, onOcupado }: { onCambio: () => void; onOcup
   const [firmaFallida, setFirmaFallida] = useState('');
   const [errorOperacion, setErrorOperacion] = useState('');
   const [aviso, setAviso] = useState('');
+  const [busqueda, setBusqueda] = useState('');
+  const [montoMin, setMontoMin] = useState('');
+  const [montoMax, setMontoMax] = useState('');
   const contexto = useRef('');
   const secuencia = useRef(0);
   contexto.current = negocio + '|' + autoridad;
@@ -60,6 +64,14 @@ export function Registro({ onCambio, onOcupado }: { onCambio: () => void; onOcup
       throw error;
     } finally { if (turno === secuencia.current) setLeyendo(false); }
   }
+
+  const estadisticas = useMemo(() => registro ? calcularEstadisticas(registro) : null, [registro]);
+  const registroFiltrado = useMemo(() => {
+    if (!registro) return null;
+    const min = montoMin.trim() ? Number(montoMin) : null;
+    const max = montoMax.trim() ? Number(montoMax) : null;
+    return filtrarClientes(registro, busqueda, min, max);
+  }, [registro, busqueda, montoMin, montoMax]);
 
   async function ejecutar(evento: React.FormEvent) {
     evento.preventDefault();
@@ -99,12 +111,44 @@ export function Registro({ onCambio, onOcupado }: { onCambio: () => void; onOcup
       <p className="help">El nombre y la autoridad determinan la dirección del registro. Puedes consultar otra autoridad en modo lectura.</p>
       {errorLectura && <p className="notice error" role="alert">{errorLectura}</p>}
     </section>
+    {registro && estadisticas && <>
+      <section className="panel stats-panel">
+        <div className="panel-heading"><h3>Estadísticas del registro</h3><span className="small-note">Cálculos en tiempo real</span></div>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <span className="stat-label">Total de ventas</span>
+            <span className="stat-value">{estadisticas.totalVentas}</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Importe acumulado</span>
+            <span className="stat-value">{estadisticas.importeTotal.toLocaleString('es-MX')} <small>{UNIDAD_MONTO}</small></span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Cliente con más compras</span>
+            <span className="stat-value">{estadisticas.clienteConMasCompras ? `${estadisticas.clienteConMasCompras.nombre} (${estadisticas.clienteConMasCompras.compras})` : '—'}</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">SKU más vendido</span>
+            <span className="stat-value">{estadisticas.skuMasVendido ? `${estadisticas.skuMasVendido.sku} (${estadisticas.skuMasVendido.cantidad})` : '—'}</span>
+          </div>
+        </div>
+      </section>
+      <section className="panel filters-panel">
+        <div className="panel-heading"><h3>Buscar y filtrar</h3><span className="small-note">Resultados en vivo</span></div>
+        <div className="filters-grid">
+          <label>Buscar cliente<input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Nombre del cliente" /></label>
+          <label>Monto mínimo<input type="number" min="1" value={montoMin} onChange={(e) => setMontoMin(e.target.value)} placeholder="Sin mínimo" /></label>
+          <label>Monto máximo<input type="number" min="1" value={montoMax} onChange={(e) => setMontoMax(e.target.value)} placeholder="Sin máximo" /></label>
+        </div>
+        {(busqueda || montoMin || montoMax) && <button className="button secondary filters-clear" onClick={() => { setBusqueda(''); setMontoMin(''); setMontoMax(''); }}>Limpiar filtros</button>}
+      </section>
+    </>}
     <div className="workspace-grid">
-      <section className="panel customers-panel"><div className="panel-heading"><h3>Clientes y ventas</h3>{registro && <span className="count">{registro.clientes.length} clientes</span>}</div>
-        {!registro ? <div className="empty-state"><span className="empty-symbol">◎</span><h4>{consultado ? 'El registro todavía no existe' : 'El negocio aparecerá aquí'}</h4><p>{consultado ? 'Comprueba el nombre y la autoridad, o crea un registro con tu wallet conectada.' : 'Consulta el registro para ver sus clientes y las ventas activas de cada uno.'}</p></div> : <>
-          <div className="registry-summary"><div><span className="label">Negocio</span><strong>{registro.nombreNegocio}</strong></div><div><span className="label">Último ID asignado</span><strong>{registro.idCounter}</strong></div></div>
-          <details className="technical-details"><summary>Dirección del registro</summary><code className="address">{registro.direccion}</code></details>
-          {registro.clientes.length === 0 ? <p className="empty-line">Todavía no hay clientes. Puedes crear el primero desde Operaciones.</p> : registro.clientes.map((cliente) => <article className="customer" key={cliente.direccion}>
+      <section className="panel customers-panel"><div className="panel-heading"><h3>Clientes y ventas</h3>{registroFiltrado && <span className="count">{registroFiltrado.clientes.length} clientes{registroFiltrado.clientes.length !== registro?.clientes.length ? ` (de ${registro?.clientes.length})` : ''}</span>}</div>
+        {!registroFiltrado ? <div className="empty-state"><span className="empty-symbol">◎</span><h4>{consultado ? 'El registro todavía no existe' : 'El negocio aparecerá aquí'}</h4><p>{consultado ? 'Comprueba el nombre y la autoridad, o crea un registro con tu wallet conectada.' : 'Consulta el registro para ver sus clientes y las ventas activas de cada uno.'}</p></div> : <>
+          <div className="registry-summary"><div><span className="label">Negocio</span><strong>{registroFiltrado.nombreNegocio}</strong></div><div><span className="label">Último ID asignado</span><strong>{registroFiltrado.idCounter}</strong></div></div>
+          <details className="technical-details"><summary>Dirección del registro</summary><code className="address">{registroFiltrado.direccion}</code></details>
+          {registroFiltrado.clientes.length === 0 ? <p className="empty-line">{busqueda || montoMin || montoMax ? 'No hay clientes que coincidan con los filtros aplicados.' : 'Todavía no hay clientes. Puedes crear el primero desde Operaciones.'}</p> : registroFiltrado.clientes.map((cliente) => <article className="customer" key={cliente.direccion}>
             <header><div><strong>{cliente.nombre}</strong><span className="small-note">Cliente #{cliente.idCliente} · {cliente.compras} ventas activas</span></div><button className="text-button" disabled={ocupado} onClick={() => { setIdCliente(String(cliente.idCliente)); setOp('venta'); }}>Seleccionar</button></header>
             {cliente.ventas.length === 0 ? <p className="empty-line">Sin ventas activas.</p> : <div className="table-wrap"><table><thead><tr><th>SKU</th><th>Descripción</th><th className="numeric">Importe</th></tr></thead><tbody>{cliente.ventas.map((venta) => <tr key={venta.direccion} onClick={() => { if (!ocupado) { setIdCliente(String(cliente.idCliente)); setSku(venta.sku); setMonto(String(venta.monto)); setOp('monto'); } }}><td><code>{venta.sku}</code></td><td>{venta.descripcion}</td><td className="numeric">{venta.monto.toLocaleString('es-MX')} <small>{UNIDAD_MONTO}</small></td></tr>)}</tbody></table></div>}
           </article>)}

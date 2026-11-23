@@ -80,6 +80,14 @@ input:disabled { background: #faf9fa; color: #8b8591; }
 .lookup-panel { margin-bottom: 22px; }
 .lookup-fields { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(220px, 1.5fr) auto; align-items: start; gap: 17px; }
 .lookup-fields .button { margin-top: 24px; }
+.stats-panel, .filters-panel { margin-bottom: 22px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.stat-card { padding: 18px 15px; background: linear-gradient(135deg, #fdf8fb 0%, #f6f4f6 100%); border-radius: 8px; border: 1px solid #f0edf0; }
+.stat-label { display: block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+.stat-value { display: block; font-size: 16px; font-weight: 650; color: #242230; letter-spacing: -0.3px; }
+.stat-value small { font-size: 9px; color: var(--muted); font-weight: 400; }
+.filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
+.filters-clear { margin-top: 15px; }
 .help { display: block; font-size: 10px; line-height: 1.8; font-weight: 400; color: #8c8490; margin: 0 0 15px; }
 label .help { margin-top: -7px; margin-bottom: 15px; }
 .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 22px; align-items: start; }
@@ -113,5 +121,5 @@ fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .app-footer details { text-align: right; max-width: 350px; }
 .app-footer code { font-size: 9px; margin-top: 9px; }
 @media (min-width: 1600px) { main { padding-top: 48px; } }
-@media (max-width: 1120px) { .sidebar { width: 206px; padding-left: 14px; padding-right: 14px; } .main-area { margin-left: 206px; } main { padding: 30px 25px; } .topbar { padding: 19px 25px; } .workspace-grid { grid-template-columns: 1fr; } .lookup-fields { grid-template-columns: 1fr 1fr; } .lookup-fields .button { margin-top: 0; grid-column: 1 / -1; justify-self: start; } .brand { font-size: 20px; gap: 7px; } .brand-caption { font-size: 7px; } }
-@media (max-width: 720px) { .app-layout { display: block; } .sidebar { position: static; width: 100%; padding: 19px 20px 11px; } .brand { font-size: 22px; } .sidebar-label, .sidebar-bottom { display: none; } .sidebar nav { display: flex; gap: 8px; margin-top: 20px; } .nav-item { width: auto; margin: 0; padding: 11px 13px; font-size: 11px; } .main-area { margin-left: 0; } .topbar { padding: 15px 20px; min-height: 72px; } .topbar-title { display: none; } main { padding: 28px 18px; } .section-heading { align-items: start; } .section-heading .tag { display: none; } .two-columns, .lookup-fields { grid-template-columns: 1fr; } .panel { padding: 21px; } .lookup-fields { gap: 0; } .lookup-fields .button { margin-top: 0; } .app-footer { flex-wrap: wrap; } .app-footer details { text-align: left; } }
+@media (max-width: 1120px) { .sidebar { width: 206px; padding-left: 14px; padding-right: 14px; } .main-area { margin-left: 206px; } main { padding: 30px 25px; } .topbar { padding: 19px 25px; } .workspace-grid { grid-template-columns: 1fr; } .lookup-fields { grid-template-columns: 1fr 1fr; } .lookup-fields .button { margin-top: 0; grid-column: 1 / -1; justify-self: start; } .brand { font-size: 20px; gap: 7px; } .brand-caption { font-size: 7px; } .stats-grid { grid-template-columns: repeat(2, 1fr); } .filters-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 720px) { .app-layout { display: block; } .sidebar { position: static; width: 100%; padding: 19px 20px 11px; } .brand { font-size: 22px; } .sidebar-label, .sidebar-bottom { display: none; } .sidebar nav { display: flex; gap: 8px; margin-top: 20px; } .nav-item { width: auto; margin: 0; padding: 11px 13px; font-size: 11px; } .main-area { margin-left: 0; } .topbar { padding: 15px 20px; min-height: 72px; } .topbar-title { display: none; } main { padding: 28px 18px; } .section-heading { align-items: start; } .section-heading .tag { display: none; } .two-columns, .lookup-fields, .filters-grid { grid-template-columns: 1fr; } .panel { padding: 21px; } .lookup-fields { gap: 0; } .lookup-fields .button { margin-top: 0; } .app-footer { flex-wrap: wrap; } .app-footer details { text-align: left; } .stats-grid { grid-template-columns: 1fr; } }

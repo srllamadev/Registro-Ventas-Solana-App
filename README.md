@@ -157,6 +157,55 @@ Este comando comprueba TypeScript, ejecuta las pruebas automatizadas y genera el
 
 Para tu primera prueba, crea un negocio, agrega un cliente, registra una venta y consulta el resultado. Después prueba corregir el importe, devolver la venta y cancelar una solicitud de firma.
 
+## Mejoras funcionales implementadas
+
+Este proyecto incluye dos mejoras funcionales sobre la versión base del registro de ventas:
+
+### 1. Panel de Estadísticas del Registro
+
+Calcula y muestra en tiempo real métricas útiles sobre el negocio:
+
+- **Total de ventas**: Número acumulado de ventas activas en el registro
+- **Importe total**: Suma de todos los montos registrados
+- **Cliente con más compras**: Identifica al cliente que más ventas tiene
+- **SKU más vendido**: El producto con más registros en el historial
+
+**Implementación**: `src/solana/estadisticas.ts` con la función `calcularEstadisticas()`. Los cálculos se ejecutan en el frontend sobre los datos leídos del programa, sin modificar la cadena.
+
+**Archivo**: `src/solana/estadisticas.ts:1-43`
+
+### 2. Búsqueda y Filtros de Clientes
+
+Permite localizar clientes y ventas específicas mediante:
+
+- **Búsqueda por nombre**: Filtra clientes cuyo nombre contenga el término buscado (case-insensitive)
+- **Filtro por monto mínimo**: Muestra solo ventas con importe igual o superior al valor indicado
+- **Filtro por monto máximo**: Muestra solo ventas con importe igual o inferior al valor indicado
+- **Combinación de filtros**: Los tres criterios pueden usarse simultáneamente
+
+**Implementación**: `src/solana/estadisticas.ts:45-70` con la función `filtrarClientes()`. El filtrado se aplica en el frontend sobre los datos ya cargados, sin realizar lecturas adicionales al RPC.
+
+**Archivos modificados**:
+- `src/solana/estadisticas.ts` - Módulo nuevo con funciones de estadísticas y filtrado
+- `src/components/Registro.tsx` - Integración del panel de estadísticas y formularios de filtros
+- `src/index.css` - Estilos para los nuevos componentes
+- `tests/estadisticas.test.ts` - 9 tests unitarios que cubren todas las combinaciones
+
+### Cómo comprobar las mejoras
+
+1. Ejecuta `npm run verificar` para confirmar que TypeScript, tests y build pasan correctamente
+2. Inicia la app con `npm run dev`
+3. Consulta un registro existente o crea uno nuevo con clientes y ventas
+4. Observa el panel de **Estadísticas del registro** que aparece después de consultar
+5. Usa los campos de **Buscar y filtrar** para:
+   - Escribir el nombre de un cliente (ej: "Ana")
+   - Establecer un monto mínimo (ej: 50)
+   - Establecer un rango de monto (ej: 40-70)
+   - Combinar búsqueda y filtros simultáneamente
+6. Pulsa "Limpiar filtros" para restaurar la vista completa
+
+Los 18 tests automatizados (9 originales + 9 nuevos) verifican el cálculo correcto de estadísticas y todas las combinaciones de filtros.
+
 ## Si algo no funciona
 
 | Situación | Qué revisar |
